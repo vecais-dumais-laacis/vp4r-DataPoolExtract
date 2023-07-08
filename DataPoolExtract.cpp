@@ -563,10 +563,11 @@ int main( int argc, char *argv[] )
                         else
                         {
                             num_changed_strings++;
-                            if (strlen(value) <= strlen(item_new_value))
+                            if (strlen(value) >= strlen(item_new_value))
                             {
                                 //we can just replace in file
-                                strcpy(value, item_new_value);
+                                printf("replacing\n%s\nwith\n%s\n", value, item_new_value);
+                                strcpy(value, item_new_value);                                
                             }
                             else
                             {
