@@ -365,3 +365,4 @@ FodyWeavers.xsd
 *.bvf
 *.bdf
 /.visualgdb
+/*.txt

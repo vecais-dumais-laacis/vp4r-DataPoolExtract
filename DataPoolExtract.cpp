@@ -8,22 +8,22 @@
 
 struct Datapool_bvf
 {
-    uint32_t fixed_header[4];
-    uint32_t some_fixed_value[4];
-    uint32_t foofoo;
-    uint32_t should_be_1;
-    uint32_t file_size;
-    uint32_t should_be_ffff0000;
-    uint32_t language_count;
-    uint32_t main_offset;
-    uint32_t offset1;
-    uint32_t offset2;
-    uint32_t offset3;
-    uint32_t offset4;
-    uint32_t offset5;
-    uint32_t offset6;
-    uint32_t offset7;
-    uint32_t offset8;
+    uint32_t fixed_header[4];//@0
+    uint32_t some_fixed_value[4];//@16
+    uint32_t foofoo;//@32
+    uint32_t should_be_1;//@36
+    uint32_t file_size;//@40
+    uint32_t should_be_ffff0000;//@44
+    uint32_t NumberOfVariants;//@48
+    uint32_t main_offset;//@52
+    uint32_t groupIdOffset;//@56
+    uint32_t variantIdOffset;//@60
+    uint32_t variantNameOffset;//@64
+    uint32_t variantLabelOffset;//@68
+    uint32_t languageIdOffset;//@72
+    uint32_t languageNameOffset;//@76
+    uint32_t languageLabelOffset;//@80
+    uint32_t languageTagOffset;//@84
     uint32_t offset_item_headers;
     uint32_t offset_items_per_lang;//items per language
     uint32_t item_id_offset;
@@ -32,31 +32,33 @@ struct Datapool_bvf
 
 struct Datapool_bdf
 {
-    uint32_t fixed_header[4];
+    uint32_t fixed_header[4];//16 bytes fixed header - 52h, 0Dh, 68h, 0E0h, 5Eh, 20h, 44h, 0E3h, 9Eh, 0F8h, 0F0h, 61h, 87h, 0E0h, 10h, 1Bh
     uint32_t uint8_ram_size_maybe;
     uint32_t negative_one;
     uint32_t itemId;
     uint32_t field_1C;
-    uint32_t should_be_ff00ff00;
-    uint32_t should_be_four;
-    uint32_t file_size;
-    uint32_t counter1;
-    uint32_t counter2;
-    uint32_t counter3;
-    uint32_t counter4;
-    uint32_t offset1;
-    uint32_t offset2;
-    uint32_t offset3;
-    uint32_t offset4;
-    uint32_t offset5;
-    uint32_t offset6;
-    uint32_t offset7;
-    uint32_t offset8;
-    uint32_t offset9;
-    uint32_t offset10;
-    uint32_t offset11;
-    uint32_t offset12;
-    uint32_t offset13;
+    uint32_t should_be_ff00ff00;//@32
+    uint32_t fileVersion;//should be 4 @36
+    uint32_t file_size;//@40
+    uint32_t numOfContexts;//@44
+    uint32_t numOfItemDescriptors;//@48
+    uint32_t m_numOfItems;//@52
+    uint32_t numOfIoItems;//@56
+
+    uint32_t pItemDescriptor;//uint16 @60
+    uint32_t pIDT_ValueType;//unsigned int @64
+    uint32_t pIDT_ImplType;//unsigned char @68
+    uint32_t pIDT_ModeFlags;//unsigned char @72
+    uint32_t pIDT_Group;//unsigned int @76
+    uint32_t pIDT_ItemOffset;//unsigned int @80
+    uint32_t pIDT_ReaderDescriptor;//unsigned char @84
+    uint32_t pIDT_WriterDescriptor;//unsigned char @88
+    uint32_t pCDT_Identifiers;//unsigned char @92
+    uint32_t pCDT_AccessMap;//unsigned int @96
+    uint32_t pCDT_AccessMapLength;//unsigned int @100
+    uint32_t pCDT_NotifyMap;//unsigned int @104
+    uint32_t pCDT_NotifyMapLength;//unsigned int @108
+
     uint32_t offset14;
     uint32_t field_74;
     uint32_t field_78;
@@ -71,25 +73,27 @@ struct BdfLoaderStruct
     uint32_t ptr_to_chunkdata;
     uint32_t ptr_to_8_bytes2;
     uint8_t *bdf_data;
-    uint16_t *bdf_data_at_offset1;
-    uint8_t *bdf_data_at_offset2;
-    uint8_t* bdf_data_at_offset3;
-    uint8_t* bdf_data_at_offset4;
-    uint8_t* bdf_data_at_offset5;
-    uint8_t* bdf_data_at_offset6;
-    uint8_t* bdf_data_at_offset7;
-    uint8_t* bdf_data_at_offset8;
-    uint8_t* bdf_data_at_offset9;
-    uint32_t* bdf_data_at_offset10;
-    uint32_t* bdf_data_at_offset11;
-    uint8_t* bdf_data_at_offset12;
-    uint8_t* bdf_data_at_offset13;
+
+    uint16_t *pItemDescriptor;
+    uint32_t *pIDT_ValueType;
+    uint8_t* pIDT_ImplType;
+    uint8_t* pIDT_ModeFlags;
+    uint32_t* pIDT_Group;
+    uint32_t* pIDT_ItemOffset;
+    uint8_t* pIDT_ReaderDescriptor;
+    uint8_t* pIDT_WriterDescriptor;
+    uint8_t* pCDT_Identifiers;
+    uint32_t* pCDT_AccessMap;
+    uint32_t* pCDT_AccessMapLength;
+    uint32_t* pCDT_NotifyMap;
+    uint32_t* pCDT_NotifyMapLength;
+
     uint8_t* bdf_data_at_offset14;
 
-	uint32_t counter1;
-	uint32_t counter2;
-	uint32_t counter3;
-	uint32_t counter4;
+	uint32_t numOfContexts;
+	uint32_t numOfItemDescriptors;
+	uint32_t m_numOfItems;
+	uint32_t numOfIoItems;
 };
 
 struct sStruct
@@ -147,8 +151,6 @@ int main( int argc, char *argv[] )
         int fs = ftell(f);
         fseek(f, 0, SEEK_SET);
         uint8_t* data = new uint8_t[fs];
-        uint8_t* usage_data = new uint8_t[fs];
-        memset(usage_data, 0, fs);
         fread(data, 1, fs, f);
         fclose(f);
         Datapool_bvf* header = (Datapool_bvf*)data;
@@ -170,88 +172,73 @@ int main( int argc, char *argv[] )
 
         BdfLoaderStruct dloader;
         dloader.bdf_data = ddata;
-        dloader.bdf_data_at_offset1 = (uint16_t*)(ddata + dheader->offset1);
-        dloader.bdf_data_at_offset2 = ddata + dheader->offset2;
-        dloader.bdf_data_at_offset3 = ddata + dheader->offset3;
-        dloader.bdf_data_at_offset4 = ddata + dheader->offset4;
-        dloader.bdf_data_at_offset5 = ddata + dheader->offset5;
-        dloader.bdf_data_at_offset6 = ddata + dheader->offset6;
-        dloader.bdf_data_at_offset7 = ddata + dheader->offset7;
-        dloader.bdf_data_at_offset8 = ddata + dheader->offset8;
-        dloader.bdf_data_at_offset9 = ddata + dheader->offset9;
-        dloader.bdf_data_at_offset10 = (uint32_t*)(ddata + dheader->offset10);
-        dloader.bdf_data_at_offset11 = (uint32_t*)(ddata + dheader->offset11);
-        dloader.bdf_data_at_offset12 = ddata + dheader->offset12;
-        dloader.bdf_data_at_offset13 = ddata + dheader->offset13;
+        dloader.pItemDescriptor = (uint16_t*)(ddata + dheader->pItemDescriptor);
+        dloader.pIDT_ValueType = (uint32_t*)(ddata + dheader->pIDT_ValueType);
+        dloader.pIDT_ImplType = ddata + dheader->pIDT_ImplType;
+        dloader.pIDT_ModeFlags = ddata + dheader->pIDT_ModeFlags;
+        dloader.pIDT_Group = (uint32_t*)(ddata + dheader->pIDT_Group);
+        dloader.pIDT_ItemOffset = (uint32_t*)(ddata + dheader->pIDT_ItemOffset);
+        dloader.pIDT_ReaderDescriptor = ddata + dheader->pIDT_ReaderDescriptor;
+        dloader.pIDT_WriterDescriptor = ddata + dheader->pIDT_WriterDescriptor;
+        dloader.pCDT_Identifiers = ddata + dheader->pCDT_Identifiers;
+        dloader.pCDT_AccessMap = (uint32_t*)(ddata + dheader->pCDT_AccessMap);
+        dloader.pCDT_AccessMapLength = (uint32_t*)(ddata + dheader->pCDT_AccessMapLength);
+        dloader.pCDT_NotifyMap = (uint32_t*)(ddata + dheader->pCDT_NotifyMap);
+        dloader.pCDT_NotifyMapLength = (uint32_t*)(ddata + dheader->pCDT_NotifyMapLength);
         dloader.bdf_data_at_offset14 = ddata + dheader->offset14;
 
-        dloader.counter1 = dheader->counter1;
-        dloader.counter2 = dheader->counter2;
-        dloader.counter3 = dheader->counter3;
-        dloader.counter4 = dheader->counter4;
+        dloader.numOfContexts = dheader->numOfContexts;
+        dloader.numOfItemDescriptors = dheader->numOfItemDescriptors;
+        dloader.m_numOfItems = dheader->m_numOfItems;
+        dloader.numOfIoItems = dheader->numOfIoItems;
 
-        for (uint32_t item_idx = 0; item_idx < header->language_count; item_idx++)
+        for (uint32_t item_idx = 0; item_idx < header->NumberOfVariants; item_idx++)
         {
-            uint32_t val1 = *(uint32_t*)(data + header->offset1 + item_idx * 4);
-            *(uint32_t*)(usage_data + header->offset1 + item_idx * 4) = 0xFEFEFEFE;
+            uint32_t val1 = *(uint32_t*)(data + header->groupIdOffset + item_idx * 4);
 
-            uint32_t tmp = *(uint32_t*)(data + header->offset4 + item_idx * 4);
-            *(uint32_t*)(usage_data + header->offset4 + item_idx * 4) = 0xFDFDFDFD;
+            uint32_t tmp = *(uint32_t*)(data + header->variantLabelOffset + item_idx * 4);
 
             uint32_t val2 = *(uint32_t*)(data + header->main_offset + tmp);
-            *(uint32_t*)(usage_data + header->main_offset + tmp) = 0xFCFCFCFC;
 
-            uint32_t val3 = *(uint32_t*)(data + header->offset2 + item_idx * 4);
-            *(uint32_t*)(usage_data + header->offset2 + item_idx * 4) = 0xFBFBFBFB;
+            uint32_t val3 = *(uint32_t*)(data + header->variantIdOffset + item_idx * 4);
 
-            tmp = *(uint32_t*)(data + header->offset3 + item_idx * 4);
-            *(uint32_t*)(usage_data + header->offset3 + item_idx * 4) = 0xFAFAFAFA;
+            tmp = *(uint32_t*)(data + header->variantNameOffset + item_idx * 4);
             char* val4 = (char*)(data + header->main_offset + tmp);
-            *(uint32_t*)(usage_data + header->main_offset + tmp) = 0xF9F9F9F9;
 
-            tmp = *(uint32_t*)(data + header->offset4 + item_idx * 4);
+            tmp = *(uint32_t*)(data + header->variantLabelOffset + item_idx * 4);
             uint32_t val5 = *(uint32_t*)(data + header->main_offset + tmp);
 
-            uint32_t val6 = *(uint32_t*)(data + header->offset2 + item_idx * 4);
+            uint32_t val6 = *(uint32_t*)(data + header->variantIdOffset + item_idx * 4);
 
-            tmp = *(uint32_t*)(data + header->offset4 + item_idx * 4);
+            tmp = *(uint32_t*)(data + header->variantLabelOffset + item_idx * 4);
             char* val7 = (char*)(data + header->main_offset + tmp);
 
-            tmp = *(uint32_t*)(data + header->offset7 + item_idx * 4);
-            *(uint32_t*)(usage_data + header->offset7 + item_idx * 4) = 0xF8F8F8F8;
+            tmp = *(uint32_t*)(data + header->languageLabelOffset + item_idx * 4);
 
             uint32_t val8 = *(uint32_t*)(data + header->main_offset + tmp);
-            *(uint32_t*)(usage_data + header->main_offset + tmp) = 0xF7F7F7F7;
 
-            uint32_t val9 = *(uint32_t*)(data + header->offset5 + item_idx * 4);
-            *(uint32_t*)(usage_data + header->offset5 + item_idx * 4) = 0xF6F6F6F6;
+            uint32_t val9 = *(uint32_t*)(data + header->languageIdOffset + item_idx * 4);
 
-            tmp = *(uint32_t*)(data + header->offset6 + item_idx * 4);
-            *(uint32_t*)(usage_data + header->offset6 + item_idx * 4) = 0xF5F5F5F5;
+            tmp = *(uint32_t*)(data + header->languageNameOffset + item_idx * 4);
             char* val10 = (char*)(data + header->main_offset + tmp);
-            *(uint32_t*)(usage_data + header->main_offset + tmp) = 0xF4F4F4F4;
 
-            tmp = *(uint32_t*)(data + header->offset7 + item_idx * 4);
+            tmp = *(uint32_t*)(data + header->languageLabelOffset + item_idx * 4);
             char* val11 = (char*)(data + header->main_offset + tmp);
 
-            tmp = *(uint32_t*)(data + header->offset8 + item_idx * 4);
-            *(uint32_t*)(usage_data + header->offset8 + item_idx * 4) = 0xF3F3F3F3;
+            tmp = *(uint32_t*)(data + header->languageTagOffset + item_idx * 4);
             char* val12 = (char*)(data + header->main_offset + tmp);
-            *(uint32_t*)(usage_data + header->main_offset + tmp) = 0xF2F2F2F2;
 
             printf("item %u: %u, %u, %u, %s, %u, %u, %s, %u, %u, %s, %s, %s\r\n", item_idx, val1, val2, val3, val4, val5, val6, val7, val8, val9, val10, val11, val12);
         }
 
-        uint32_t lang_index = 1;
-        while (true)
+        for(uint32_t lang_index = 0; lang_index < header->NumberOfVariants; lang_index++ )
         {
             uint32_t items_in_this_type = *(uint32_t*)(data + header->offset_items_per_lang + lang_index * 4);
-            *(uint32_t*)(usage_data + header->offset_items_per_lang + lang_index * 4) = 0xF1F1F1F1;
 
             if (!items_in_this_type)
-                break;
+                continue;
 
-            const char* currentLang = (char*)(data + header->main_offset + *(uint32_t*)(data + header->offset6 + lang_index * 4));
+            const char* currentLang = (char*)(data + header->main_offset + *(uint32_t*)(data + header->languageNameOffset + lang_index * 4));
             if (!currentLang[0])
             {
                 currentLang = "Default";
@@ -273,117 +260,58 @@ int main( int argc, char *argv[] )
             {
                 //maybe item id
                 uint32_t itemId = *(uint32_t*)(data + item_header_offset + header->item_id_offset);
-                *(uint32_t*)(usage_data + item_header_offset + header->item_id_offset) = 0xF0F0F0F0;
                 if (1)
                 {
-                    uint16_t valueType = *(uint16_t*)(ddata + dheader->offset1 + itemId * 2);
-                    uint8_t implementationType = *(uint8_t*)(ddata + dheader->offset3 + valueType);
-                    uint8_t value_type_value2 = *(uint32_t*)(ddata + dheader->offset2 + 4 * implementationType);
+                    uint16_t itemDescriptor = dloader.pItemDescriptor[itemId];
+                    uint8_t implementationType = dloader.pIDT_ImplType[itemDescriptor];
+                    uint8_t valueType = dloader.pIDT_ValueType[itemDescriptor];
 
-                    //if ( (valueType != 22) && (value_type_value2 != 7 ) )
+                    uint32_t value_offset = *(uint32_t*)(data + item_header_offset + header->offset12);
+
+                    switch (valueType)
                     {
-                        uint32_t value_offset = *(uint32_t*)(data + item_header_offset + header->offset12);
-                        *(uint32_t*)(usage_data + item_header_offset + header->offset12) = 0xefefefef;
-
-                        bool isString = false;
-                        if ((valueType == 22) && (implementationType == 1) && (value_type_value2 == 7))
-                            isString = true;
-						if ((valueType == 23) && (implementationType == 1) && (value_type_value2 == 7))
-							isString = true;
-                        if ((valueType == 3) && (implementationType == 1) && (value_type_value2 == 7))
-                            isString = true;
-                        if ((valueType == 21) && (implementationType == 1) && (value_type_value2 == 7))
-                            isString = true;
-                        if ((valueType == 46) && (implementationType == 1) && (value_type_value2 == 7))
-                            isString = true;
-
-                        if (isString)
+                    case 11://string						
                         {
-                            char* value = (char*)(data + header->offset12 + value_offset + item_header_offset);
-                            if(strlen(value))
-                                fprintf(f, "%u: %s\r\n", itemId, value);
+							char* value = (char*)(data + header->offset12 + value_offset + item_header_offset);
+							if (strlen(value) && !strchr(value, '_'))
+								fprintf(f, "%u: %s\r\n", itemId, value);
+
+                            //printf("string id: %u itemDescriptor: %u implementationType: %u value type: %u\r\n", itemId, itemDescriptor, implementationType, valueType);
+                            //printf("string id: %u %s\r\n", itemId, value);
                         }
-                        if(false)//else
+                        break;
+                    case 26://string list
+                        //printf("string list id: %u\r\n", itemId, itemDescriptor, implementationType, valueType);
+                        //hex_dump(data + header->offset12 + value_offset + item_header_offset, 20);
                         {
-                            //printf("item %u: %u %u, %u, %u %u\r\n", item_index, val1, valueType, implementationType, value_type_value2, value_offset + initial_type_offset + header->offset12 );
-                            //hex_dump(data + header->offset12 + initial_type_offset, 8 );
-
-                            if ((valueType == 23) || (valueType == 24) || (valueType == 2))
+                            uint32_t* dataPtr = (uint32_t*)(data + header->offset12 + value_offset + item_header_offset);
+                            uint32_t itemCount = *dataPtr++;
+                            dataPtr += *dataPtr / 4;
+                            for (uint32_t listItem = 0; listItem < itemCount; listItem++)
                             {
-                                uint32_t* data_ptr = &value_offset;
-                                printf("item idx %u: id: %u valueType: %u, impType: %u, vtype2: %u offset: %u data: %u\r\n", item_index, itemId, valueType, implementationType, value_type_value2, value_offset + item_header_offset + header->offset12, *data_ptr);
-                                //(*(uint32_t*)(usage_data + item_header_offset + header->offset12 + value_offset))++;
-                            }
-                            else
-                            {
-                                //item idx 2086: id: 5856 valueType: 22, impType: 1, vtype2: 7 offset: 733149 data0: 2228856792 data1: 3017320408
-                                if ((value_type_value2 == 7) && (valueType == 22) && (implementationType == 1))
-                                {
-                                    /*
-                                    uint32_t* data_ptr = (uint32_t*)(data + header->offset12 + value_offset + item_header_offset);
-                                    printf("item idx %u: id: %u valueType: %u, impType: %u, vtype2: %u offset: %u data0: %u data1: %u\r\n", item_index, itemId, valueType, implementationType, value_type_value2, value_offset + item_header_offset + header->offset12, *data_ptr, *(data_ptr + 1));
-                                    char* value = (char*)data_ptr;// data + header->offset12 + value_offset + item_header_offset;
-                                    memset(usage_data + header->offset12 + value_offset + item_header_offset, 0xFF, strlen(value) + 1);
-                                    if (value[0])
-                                    {
-                                        printf("value: %s\r\n", value);
-                                    }
-                                    */
-                                    /*
-                                    printf("item %u: %u %u, %u, %u %u\r\n", item_index, val1, valueType, implementationType, value_type_value2, value_offset + initial_type_offset + header->offset12);
-                                    char* value = (char*)data + initial_type_offset + header->offset12 + value_offset;
-                                    memset(usage_data + initial_type_offset + header->offset12 + value_offset, 0xFF, strlen(value) + 1 );
-                                    if (value[0])
-                                        printf("value: %s\r\n", value);
-                                    */
-                                }
-                                else
-                                {
-                                    uint32_t* data_ptr = (uint32_t*)(data + header->offset12 + item_header_offset + value_offset);
-                                    uint32_t* data_ptr2 = (uint32_t*)(((uint8_t*)data_ptr) + *data_ptr);
-                                    printf("item idx %u: id: %u valueType: %u, impType: %u, vtype2: %u offset: %u data0: %u data1: %u\r\n", item_index, itemId, valueType, implementationType, value_type_value2, value_offset + item_header_offset + header->offset12, *data_ptr, *(data_ptr + 1));
-                                    if ((uint8_t*)data_ptr2 < data + header->file_size)
-                                    {
-                                        printf("Jumped to: %u with value: %u %u\r\n", (uint8_t*)data_ptr2 - (uint8_t*)data, *data_ptr2, *(data_ptr2 + 1));
-                                    }
-                                    //(*(uint32_t*)(usage_data + item_header_offset + header->offset12 + value_offset))++;
+                                char* value = (char*)dataPtr + *dataPtr;
+                                dataPtr++;
+								//printf("%u.%u: %s\r\n", itemId, listItem, value);
 
-                                    char* value = (char*)data_ptr;// data + header->offset12 + value_offset + item_header_offset;
-                                    //memset(usage_data + header->offset12 + value_offset + item_header_offset, 0xFF, strlen(value) + 1);
-                                    if (value[0])
-                                    {
-                                        printf("value: %s\r\n", value);
-                                    }
-                                }
+                                if (strlen(value) && !strchr(value, '_'))
+									fprintf(f, "%u.%u: %s\r\n", itemId, listItem, value);
                             }
                         }
-
-                        //hex_dump(data + initial_type_offset + header->offset12 + val2, 8);
-
-                        //uint32_t val3 = *(uint32_t*)(data + initial_type_offset + header->offset12 + 4 );
-
-                        //hex_dump(data + val3, 8);
+                        break;
+                    default:
+						printf("item id: %u itemDescriptor: %u implementationType: %u value type: %u\r\n", itemId, itemDescriptor, implementationType, valueType);
                     }
                 }
                 item_header_offset += 4;
             }
 
-            lang_index++;
+            //lang_index++;
 
             fclose(f);
         }
 
         delete[]data;
         delete[] ddata;
-
-        f = fopen("usage.data", "wb");
-        if (f)
-        {
-            fwrite(usage_data, 1, fs, f);
-            fclose(f);
-        }
-
-        delete[] usage_data;
     }
     else
     {
@@ -423,62 +351,62 @@ int main( int argc, char *argv[] )
 
         BdfLoaderStruct dloader;
         dloader.bdf_data = ddata;
-        dloader.bdf_data_at_offset1 = (uint16_t*)(ddata + dheader->offset1);
-        dloader.bdf_data_at_offset2 = ddata + dheader->offset2;
-        dloader.bdf_data_at_offset3 = ddata + dheader->offset3;
-        dloader.bdf_data_at_offset4 = ddata + dheader->offset4;
-        dloader.bdf_data_at_offset5 = ddata + dheader->offset5;
-        dloader.bdf_data_at_offset6 = ddata + dheader->offset6;
-        dloader.bdf_data_at_offset7 = ddata + dheader->offset7;
-        dloader.bdf_data_at_offset8 = ddata + dheader->offset8;
-        dloader.bdf_data_at_offset9 = ddata + dheader->offset9;
-        dloader.bdf_data_at_offset10 = (uint32_t*)(ddata + dheader->offset10);
-        dloader.bdf_data_at_offset11 = (uint32_t*)(ddata + dheader->offset11);
-        dloader.bdf_data_at_offset12 = ddata + dheader->offset12;
-        dloader.bdf_data_at_offset13 = ddata + dheader->offset13;
+        dloader.pItemDescriptor = (uint16_t*)(ddata + dheader->pItemDescriptor);
+        dloader.pIDT_ValueType = (uint32_t*)(ddata + dheader->pIDT_ValueType);
+        dloader.pIDT_ImplType = ddata + dheader->pIDT_ImplType;
+        dloader.pIDT_ModeFlags = ddata + dheader->pIDT_ModeFlags;
+        dloader.pIDT_Group = (uint32_t*)(ddata + dheader->pIDT_Group);
+        dloader.pIDT_ItemOffset = (uint32_t*)(ddata + dheader->pIDT_ItemOffset);
+        dloader.pIDT_ReaderDescriptor = ddata + dheader->pIDT_ReaderDescriptor;
+        dloader.pIDT_WriterDescriptor = ddata + dheader->pIDT_WriterDescriptor;
+        dloader.pCDT_Identifiers = ddata + dheader->pCDT_Identifiers;
+        dloader.pCDT_AccessMap = (uint32_t*)(ddata + dheader->pCDT_AccessMap);
+        dloader.pCDT_AccessMapLength = (uint32_t*)(ddata + dheader->pCDT_AccessMapLength);
+        dloader.pCDT_NotifyMap = (uint32_t*)(ddata + dheader->pCDT_NotifyMap);
+        dloader.pCDT_NotifyMapLength = (uint32_t*)(ddata + dheader->pCDT_NotifyMapLength);
         dloader.bdf_data_at_offset14 = ddata + dheader->offset14;
 
-        dloader.counter1 = dheader->counter1;
-        dloader.counter2 = dheader->counter2;
-        dloader.counter3 = dheader->counter3;
-        dloader.counter4 = dheader->counter4;
+        dloader.numOfContexts = dheader->numOfContexts;
+        dloader.numOfItemDescriptors = dheader->numOfItemDescriptors;
+        dloader.m_numOfItems = dheader->m_numOfItems;
+        dloader.numOfIoItems = dheader->numOfIoItems;
 
         uint32_t lang_to_replace = _stricmp(argv[1], "Default") == 0 ? 0 : - 1;
 
-        for (uint32_t item_idx = 1; item_idx < header->language_count; item_idx++)
+        for (uint32_t item_idx = 1; item_idx < header->NumberOfVariants; item_idx++)
         {
-            uint32_t val1 = *(uint32_t*)(data + header->offset1 + item_idx * 4);
+            uint32_t val1 = *(uint32_t*)(data + header->groupIdOffset + item_idx * 4);
 
-            uint32_t tmp = *(uint32_t*)(data + header->offset4 + item_idx * 4);
+            uint32_t tmp = *(uint32_t*)(data + header->variantLabelOffset + item_idx * 4);
 
             uint32_t val2 = *(uint32_t*)(data + header->main_offset + tmp);
 
-            uint32_t val3 = *(uint32_t*)(data + header->offset2 + item_idx * 4);
+            uint32_t val3 = *(uint32_t*)(data + header->variantIdOffset + item_idx * 4);
 
-            tmp = *(uint32_t*)(data + header->offset3 + item_idx * 4);
+            tmp = *(uint32_t*)(data + header->variantNameOffset + item_idx * 4);
             char* val4 = (char*)(data + header->main_offset + tmp);
 
-            tmp = *(uint32_t*)(data + header->offset4 + item_idx * 4);
+            tmp = *(uint32_t*)(data + header->variantLabelOffset + item_idx * 4);
             uint32_t val5 = *(uint32_t*)(data + header->main_offset + tmp);
 
-            uint32_t val6 = *(uint32_t*)(data + header->offset2 + item_idx * 4);
+            uint32_t val6 = *(uint32_t*)(data + header->variantIdOffset + item_idx * 4);
 
-            tmp = *(uint32_t*)(data + header->offset4 + item_idx * 4);
+            tmp = *(uint32_t*)(data + header->variantLabelOffset + item_idx * 4);
             char* val7 = (char*)(data + header->main_offset + tmp);
 
-            tmp = *(uint32_t*)(data + header->offset7 + item_idx * 4);
+            tmp = *(uint32_t*)(data + header->languageLabelOffset + item_idx * 4);
 
             uint32_t val8 = *(uint32_t*)(data + header->main_offset + tmp);
 
-            uint32_t val9 = *(uint32_t*)(data + header->offset5 + item_idx * 4);
+            uint32_t val9 = *(uint32_t*)(data + header->languageIdOffset + item_idx * 4);
 
-            tmp = *(uint32_t*)(data + header->offset6 + item_idx * 4);
+            tmp = *(uint32_t*)(data + header->languageNameOffset + item_idx * 4);
             char* val10 = (char*)(data + header->main_offset + tmp);
 
-            tmp = *(uint32_t*)(data + header->offset7 + item_idx * 4);
+            tmp = *(uint32_t*)(data + header->languageLabelOffset + item_idx * 4);
             char* val11 = (char*)(data + header->main_offset + tmp);
 
-            tmp = *(uint32_t*)(data + header->offset8 + item_idx * 4);
+            tmp = *(uint32_t*)(data + header->languageTagOffset + item_idx * 4);
             char* val12 = (char*)(data + header->main_offset + tmp);
 
             printf("item %u: %u, %u, %u, %s, %u, %u, %s, %u, %u, %s, %s, %s\r\n", item_idx, val1, val2, val3, val4, val5, val6, val7, val8, val9, val10, val11, val12);
@@ -520,6 +448,12 @@ int main( int argc, char *argv[] )
             {
                 tmp[0] = 0;
                 uint32_t item_to_replace = atol(lang_string);
+                char* atmp = strchr(lang_string, '.');
+                uint32_t listIndex = 0xFFFFFFFF;
+                if (atmp)
+                {
+                    listIndex = atol(atmp + 1);
+                }
                 char* item_new_value = tmp + 2;
 
                 //find item in db
@@ -537,56 +471,94 @@ int main( int argc, char *argv[] )
                     if (itemId != item_to_replace)
                         continue;
 
-                    uint16_t valueType = *(uint16_t*)(ddata + dheader->offset1 + itemId * 2);
-                    uint8_t implementationType = *(uint8_t*)(ddata + dheader->offset3 + valueType);
-                    uint8_t value_type_value2 = *(uint32_t*)(ddata + dheader->offset2 + 4 * implementationType);
-                    bool isString = false;
-                    if ((valueType == 22) && (implementationType == 1) && (value_type_value2 == 7))
-                        isString = true;
-					if ((valueType == 23) && (implementationType == 1) && (value_type_value2 == 7))
-						isString = true;
-                    if ((valueType == 3) && (implementationType == 1) && (value_type_value2 == 7))
-                        isString = true;
-                    if ((valueType == 21) && (implementationType == 1) && (value_type_value2 == 7))
-                        isString = true;
-                    if ((valueType == 46) && (implementationType == 1) && (value_type_value2 == 7))
-                        isString = true;
+					uint16_t itemDescriptor = dloader.pItemDescriptor[itemId];
+					uint8_t implementationType = dloader.pIDT_ImplType[itemDescriptor];
+					uint8_t valueType = dloader.pIDT_ValueType[itemDescriptor];
 
-                    if (isString)
+					uint32_t *value_offset = (uint32_t*)(data + item_header_offset + header->offset12);
+
+                    switch (valueType)
                     {
-                        uint32_t* value_offset = (uint32_t*)(data + item_header_offset + header->offset12);
-                        char* value = (char*)(data + header->offset12 + *value_offset + item_header_offset);
-                        if (strcmp(value, item_new_value) == 0)
+                    case 11://string						
                         {
-                            printf("%u is not changed - skipping\r\n", item_to_replace);
-                        }
-                        else
-                        {
-                            num_changed_strings++;
-                            if (strlen(value) >= strlen(item_new_value))
+                            char* value = (char*)(data + header->offset12 + *value_offset + item_header_offset);
+
+                            if (strlen(value) && !strchr(value, '_'))
                             {
-                                //we can just replace in file
-                                printf("replacing\n%s\nwith\n%s\n", value, item_new_value);
-                                strcpy(value, item_new_value);                                
-                            }
-                            else
-                            {
-								uint32_t absolute_offset = (value - (char*)data);
-								uint32_t absolute_offset_new = header->file_size + new_string_buffer_size;
-								//adjust offset
-								*value_offset += absolute_offset_new - absolute_offset;
-								//add new string to buffer
-								strcpy(new_string_buffer + new_string_buffer_size, item_new_value);
-								new_string_buffer_size += strlen(item_new_value) + 1;
+                                if (strcmp(value, item_new_value) == 0)
+                                {
+                                    printf("%u is not changed - skipping\r\n", item_to_replace);
+                                }
+                                else
+                                {
+                                    num_changed_strings++;
+                                    if (strlen(value) >= strlen(item_new_value))
+                                    {
+                                        //we can just replace in file
+                                        printf("replacing\n%s\nwith\n%s\n", value, item_new_value);
+                                        strcpy(value, item_new_value);
+                                    }
+                                    else
+                                    {
+                                        uint32_t absolute_offset = (value - (char*)data);
+                                        uint32_t absolute_offset_new = header->file_size + new_string_buffer_size;
+                                        //adjust offset
+                                        *value_offset += absolute_offset_new - absolute_offset;
+                                        //add new string to buffer
+                                        strcpy(new_string_buffer + new_string_buffer_size, item_new_value);
+                                        new_string_buffer_size += strlen(item_new_value) + 1;
+                                    }
+                                }
                             }
                         }
-                    }
-                    else
-                    {
-                        printf("%u is not a string - skipping\r\n", item_to_replace);
-                    }
-                    //found/processed item
                     break;
+                    case 26://string list
+                        {
+                            uint32_t* dataPtr = (uint32_t*)(data + header->offset12 + *value_offset + item_header_offset);
+                            uint32_t itemCount = *dataPtr++;
+                            dataPtr += *dataPtr / 4;
+                            for (uint32_t listItem = 0; listItem < itemCount; listItem++)
+                            {
+                                char* value = (char*)dataPtr + *dataPtr;
+
+                                if (listItem == listIndex)
+                                {
+                                    //replacing this item
+                                    if (strlen(value) && !strchr(value, '_'))
+                                    {
+                                        if (strcmp(value, item_new_value) == 0)
+                                        {
+                                            printf("%u.%u is not changed - skipping\r\n", item_to_replace, listIndex);
+                                        }
+                                        else
+                                        {
+                                            num_changed_strings++;
+                                            if (strlen(value) >= strlen(item_new_value))
+                                            {
+                                                //we can just replace in file
+                                                printf("replacing\n%s\nwith\n%s\n", value, item_new_value);
+                                                strcpy(value, item_new_value);
+                                            }
+                                            else
+                                            {
+                                                uint32_t absolute_offset = (value - (char*)data);
+                                                uint32_t absolute_offset_new = header->file_size + new_string_buffer_size;
+                                                //adjust offset
+                                                *dataPtr += absolute_offset_new - absolute_offset;
+
+                                                //add new string to buffer
+                                                strcpy(new_string_buffer + new_string_buffer_size, item_new_value);
+                                                new_string_buffer_size += strlen(item_new_value) + 1;
+                                            }
+                                        }
+                                    }
+                                }
+
+                                dataPtr++;
+                            }
+                        }
+                    break;
+                    }
                 }
             }
         }
