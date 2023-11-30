@@ -273,7 +273,7 @@ int main( int argc, char *argv[] )
                     case 11://string						
                         {
 							char* value = (char*)(data + header->offset12 + value_offset + item_header_offset);
-							if (strlen(value) && !strchr(value, '_'))
+							if (strlen(value) && !strchr(value, '_') && !strstr( value, "LATE") && !strstr(value, "TRANSLAT" ) && !strstr(value, "translat") && !strstr( value, "Xlate" ) && !strstr( value, "x'Late" ) && !strstr( value, "Font:" ) && !strstr( value, "Width:") )
 								fprintf(f, "%u: %s\r\n", itemId, value);
 
                             //printf("string id: %u itemDescriptor: %u implementationType: %u value type: %u\r\n", itemId, itemDescriptor, implementationType, valueType);
@@ -293,7 +293,7 @@ int main( int argc, char *argv[] )
                                 dataPtr++;
 								//printf("%u.%u: %s\r\n", itemId, listItem, value);
 
-                                if (strlen(value) && !strchr(value, '_'))
+                                if (strlen(value) && !strchr(value, '_') && !strstr(value, "LATE") && !strstr(value, "TRANSLAT") && !strstr(value, "translat") && !strstr(value, "Xlate") && !strstr(value, "x'Late") && !strstr(value, "Font:") && !strstr(value, "Width:"))
 									fprintf(f, "%u.%u: %s\r\n", itemId, listItem, value);
                             }
                         }
