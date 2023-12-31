@@ -5,6 +5,8 @@
 #include <iostream>
 #include <windows.h>
 #include <stdint.h>
+#include <vector>
+using namespace std;
 
 struct Datapool_bvf
 {
@@ -134,6 +136,97 @@ wchar_t* DbUtf8ToWide(char* src, wchar_t* dst)
 	return dst;
 }
 
+vector<uint32_t> GenerateBannedItems(uint8_t* data, Datapool_bvf* header, BdfLoaderStruct &dloader)
+{
+	vector<uint32_t> BannedItems;
+
+	for (uint32_t lang_index = 0; lang_index < header->NumberOfVariants; lang_index++)
+	{
+		uint32_t items_in_this_type = *(uint32_t*)(data + header->offset_items_per_lang + lang_index * 4);
+
+		if (!items_in_this_type)
+			continue;
+
+		const char* currentLang = (char*)(data + header->main_offset + *(uint32_t*)(data + header->languageNameOffset + lang_index * 4));
+		if (!currentLang[0])
+		{
+			currentLang = "Default";
+		}
+		if (strcmp(currentLang, "Hindi"))
+			continue;
+		uint32_t item_header_offset = *(uint32_t*)(data + header->offset_item_headers + lang_index * 4) * 4;
+
+		for (uint32_t item_index = 0; item_index < items_in_this_type; item_index++)
+		{
+			//maybe item id
+			uint32_t itemId = *(uint32_t*)(data + item_header_offset + header->item_id_offset);
+			if (1)
+			{
+				uint16_t itemDescriptor = dloader.pItemDescriptor[itemId];
+				uint8_t implementationType = dloader.pIDT_ImplType[itemDescriptor];
+				uint8_t valueType = dloader.pIDT_ValueType[itemDescriptor];
+
+				uint32_t value_offset = *(uint32_t*)(data + item_header_offset + header->offset12);
+
+				bool item_is_ok = true;
+
+				switch (valueType)
+				{
+				case 11://string						
+				{
+					char* value = (char*)(data + header->offset12 + value_offset + item_header_offset);
+					if (strlen(value) && !strchr(value, '_') && !strstr(value, "LATE") && !strstr(value, "TRANSLAT") && !strstr(value, "translat") && !strstr(value, "Xlate") && !strstr(value, "x'Late") )
+					{
+
+					}
+					else
+					{
+						item_is_ok = false;
+					}
+
+					//printf("string id: %u itemDescriptor: %u implementationType: %u value type: %u\r\n", itemId, itemDescriptor, implementationType, valueType);
+					//printf("string id: %u %s\r\n", itemId, value);
+				}
+				break;
+				case 26://string list
+					//printf("string list id: %u\r\n", itemId, itemDescriptor, implementationType, valueType);
+					//hex_dump(data + header->offset12 + value_offset + item_header_offset, 20);
+				{
+					uint32_t* dataPtr = (uint32_t*)(data + header->offset12 + value_offset + item_header_offset);
+					uint32_t itemCount = *dataPtr++;
+					dataPtr += *dataPtr / 4;
+					for (uint32_t listItem = 0; listItem < itemCount; listItem++)
+					{
+						char* value = (char*)dataPtr + *dataPtr;
+						dataPtr++;
+						//printf("%u.%u: %s\r\n", itemId, listItem, value);
+
+						if (strlen(value) && !strchr(value, '_') && !strstr(value, "LATE") && !strstr(value, "TRANSLAT") && !strstr(value, "translat") && !strstr(value, "Xlate") && !strstr(value, "x'Late") )
+						{
+
+						}
+						else
+						{
+							item_is_ok = false;
+						}
+					}
+				}
+				break;
+				default:
+					item_is_ok = false;
+				}
+				if (!item_is_ok)
+				{
+					BannedItems.push_back(itemId);
+				}
+			}
+			item_header_offset += 4;
+		}
+	}
+    printf("Total banned items: %u\r\n", BannedItems.size());
+    return BannedItems;
+}
+
 int main( int argc, char *argv[] )
 {
     SetConsoleOutputCP(CP_UTF8);
@@ -228,8 +321,10 @@ int main( int argc, char *argv[] )
             tmp = *(uint32_t*)(data + header->languageTagOffset + item_idx * 4);
             char* val12 = (char*)(data + header->main_offset + tmp);
 
-            printf("item %u: %u, %u, %u, %s, %u, %u, %s, %u, %u, %s, %s, %s\r\n", item_idx, val1, val2, val3, val4, val5, val6, val7, val8, val9, val10, val11, val12);
+            //printf("item %u: %u, %u, %u, %s, %u, %u, %s, %u, %u, %s, %s, %s\r\n", item_idx, val1, val2, val3, val4, val5, val6, val7, val8, val9, val10, val11, val12);
         }
+
+        vector<uint32_t> BannedItems = GenerateBannedItems(data, header, dloader);
 
         for(uint32_t lang_index = 0; lang_index < header->NumberOfVariants; lang_index++ )
         {
@@ -252,15 +347,23 @@ int main( int argc, char *argv[] )
                 break;
             }
 
-            printf("type %u have %u items\r\n", lang_index, items_in_this_type);
+            printf("lang %s have %u items\r\n", currentLang, items_in_this_type);
 
             uint32_t item_header_offset = *(uint32_t*)(data + header->offset_item_headers + lang_index * 4) * 4;
 
             for (uint32_t item_index = 0; item_index < items_in_this_type; item_index++)
             {
                 //maybe item id
+                bool item_is_ok = true;
                 uint32_t itemId = *(uint32_t*)(data + item_header_offset + header->item_id_offset);
-                if (1)
+                for( int k = 0; k < BannedItems.size(); k++ )
+                    if (BannedItems[k] == itemId)
+                    {
+                        printf("banned item %u at index %u\r\n", itemId, k);
+                        item_is_ok = false;
+                        break;
+                    }
+                if (item_is_ok)
                 {
                     uint16_t itemDescriptor = dloader.pItemDescriptor[itemId];
                     uint8_t implementationType = dloader.pIDT_ImplType[itemDescriptor];
@@ -273,7 +376,7 @@ int main( int argc, char *argv[] )
                     case 11://string						
                         {
 							char* value = (char*)(data + header->offset12 + value_offset + item_header_offset);
-							if (strlen(value) && !strchr(value, '_') && !strstr( value, "LATE") && !strstr(value, "TRANSLAT" ) && !strstr(value, "translat") && !strstr( value, "Xlate" ) && !strstr( value, "x'Late" ) && !strstr( value, "Font:" ) && !strstr( value, "Width:") )
+							if (strlen(value) && !strchr(value, '_') )
 								fprintf(f, "%u: %s\r\n", itemId, value);
 
                             //printf("string id: %u itemDescriptor: %u implementationType: %u value type: %u\r\n", itemId, itemDescriptor, implementationType, valueType);
@@ -293,18 +396,17 @@ int main( int argc, char *argv[] )
                                 dataPtr++;
 								//printf("%u.%u: %s\r\n", itemId, listItem, value);
 
-                                if (strlen(value) && !strchr(value, '_') && !strstr(value, "LATE") && !strstr(value, "TRANSLAT") && !strstr(value, "translat") && !strstr(value, "Xlate") && !strstr(value, "x'Late") && !strstr(value, "Font:") && !strstr(value, "Width:"))
+                                if (strlen(value) && !strchr(value, '_') )
 									fprintf(f, "%u.%u: %s\r\n", itemId, listItem, value);
                             }
                         }
                         break;
-                    default:
-						printf("item id: %u itemDescriptor: %u implementationType: %u value type: %u\r\n", itemId, itemDescriptor, implementationType, valueType);
+                    //default:
+						//printf("item id: %u itemDescriptor: %u implementationType: %u value type: %u\r\n", itemId, itemDescriptor, implementationType, valueType);
                     }
                 }
                 item_header_offset += 4;
             }
-
             //lang_index++;
 
             fclose(f);
@@ -430,6 +532,8 @@ int main( int argc, char *argv[] )
 			return 3;
 		}
 
+		vector<uint32_t> BannedItems = GenerateBannedItems(data, header, dloader);
+
         char* new_string_buffer = new char[ 1024 * 1024 ];
         uint32_t new_string_buffer_size = 0;
         uint32_t num_changed_strings = 0;
@@ -448,6 +552,16 @@ int main( int argc, char *argv[] )
             {
                 tmp[0] = 0;
                 uint32_t item_to_replace = atol(lang_string);
+                bool item_is_ok = true;
+                for( int k = 0; k < BannedItems.size(); k++ )
+                    if (BannedItems[k] == item_to_replace)
+                    {
+                        item_is_ok = false;
+                        break;
+                    }
+                if (!item_is_ok)
+                    continue;//skip this item
+
                 char* atmp = strchr(lang_string, '.');
                 uint32_t listIndex = 0xFFFFFFFF;
                 if (atmp)
